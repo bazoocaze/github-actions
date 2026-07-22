@@ -1,7 +1,7 @@
 name: "Maven Setup with GitHub Packages"
 description: >
-  Sets up JDK, copies a Maven settings.xml (configured to consume packages from
-  GitHub Packages via wildcard URL), and authenticates using GITHUB_TOKEN.
+  Sets up JDK and configures Maven with a GitHub Packages repository (wildcard URL
+  for the repository owner) and authentication via GITHUB_TOKEN.
 
 inputs:
   java-version:
@@ -14,22 +14,48 @@ inputs:
     required: false
     default: "temurin"
 
+  github-owner:
+    description: "GitHub owner (user or org) whose packages to consume"
+    required: false
+    default: "bazoocaze"
+
   server-id:
     description: "ID of the server in settings.xml"
     required: false
     default: "github"
 
-  settings-path:
-    description: "Path to the custom settings.xml relative to the repo root"
-    required: false
-    default: ".github/workflows/settings.xml"
-
 runs:
   using: "composite"
   steps:
-    - name: Copy Maven settings
+    - name: Generate Maven settings.xml
       shell: bash
-      run: mkdir -p ~/.m2 && cp ${{ inputs.settings-path }} ~/.m2/settings.xml
+      run: |
+        mkdir -p ~/.m2
+        cat > ~/.m2/settings.xml <<EOF
+        <settings>
+          <servers>
+            <server>
+              <id>${{ inputs.server-id }}</id>
+              <username>\${env.GITHUB_ACTOR}</username>
+              <password>\${env.GITHUB_TOKEN}</password>
+            </server>
+          </servers>
+          <profiles>
+            <profile>
+              <id>github</id>
+              <repositories>
+                <repository>
+                  <id>${{ inputs.server-id }}</id>
+                  <url>https://maven.pkg.github.com/${{ inputs.github-owner }}/*</url>
+                </repository>
+              </repositories>
+            </profile>
+          </profiles>
+          <activeProfiles>
+            <activeProfile>github</activeProfile>
+          </activeProfiles>
+        </settings>
+        EOF
 
     - name: Set up JDK ${{ inputs.java-version }}
       uses: actions/setup-java@v4

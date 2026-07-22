@@ -1,16 +1,16 @@
 # GitHub Actions — Maven + GitHub Packages
 
-Reusable composite actions and configuration files for Maven projects
-that consume packages from GitHub Packages.
+Reusable composite actions for Maven projects that consume packages from
+GitHub Packages.
 
 ## Contents
 
 ### `maven-setup/`
 
 Composite action that:
-1. Copies a versioned `settings.xml` into `~/.m2/`
-2. Sets up JDK via `actions/setup-java` with `overwrite-settings: false`
-3. Configures authentication for GitHub Packages
+1. Generates a `~/.m2/settings.xml` with GitHub Packages repository (wildcard URL)
+   and authentication configured.
+2. Sets up JDK via `actions/setup-java` with `overwrite-settings: false`.
 
 **Usage:**
 
@@ -21,7 +21,7 @@ steps:
   - uses: bazoocaze/github-actions/maven-setup@v1
     with:
       java-version: "21"
-      settings-path: ".github/workflows/settings.xml"
+      github-owner: "bazoocaze"
 
   - name: Build with Maven
     run: mvn -B compile --file pom.xml
