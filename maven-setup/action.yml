@@ -1,0 +1,43 @@
+name: "Maven Setup with GitHub Packages"
+description: >
+  Sets up JDK, copies a Maven settings.xml (configured to consume packages from
+  GitHub Packages via wildcard URL), and authenticates using GITHUB_TOKEN.
+
+inputs:
+  java-version:
+    description: "Java version to set up"
+    required: false
+    default: "21"
+
+  java-distribution:
+    description: "Java distribution"
+    required: false
+    default: "temurin"
+
+  server-id:
+    description: "ID of the server in settings.xml"
+    required: false
+    default: "github"
+
+  settings-path:
+    description: "Path to the custom settings.xml relative to the repo root"
+    required: false
+    default: ".github/workflows/settings.xml"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Copy Maven settings
+      shell: bash
+      run: mkdir -p ~/.m2 && cp ${{ inputs.settings-path }} ~/.m2/settings.xml
+
+    - name: Set up JDK ${{ inputs.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: ${{ inputs.java-distribution }}
+        cache: maven
+        overwrite-settings: false
+        server-id: ${{ inputs.server-id }}
+        server-username: GITHUB_ACTOR
+        server-password: GITHUB_TOKEN
